@@ -58,13 +58,13 @@ INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUES (10, "Zach", "Skye", 9, null);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (3, "Matthew", "Christy", 2, 3);
+VALUES (3, "Matthew", "Christy", 2, 4);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (1, "Alec", "Mars", 1, 3);
+VALUES (1, "Alec", "Mars", 1, 4);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (2, "Bert", "Rider", 1, 3);
+VALUES (2, "Bert", "Rider", 1, 4);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUES (6, "Gerard", "Cotton", 5, 7);

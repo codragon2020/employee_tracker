@@ -3,14 +3,17 @@ const mysql = require('mysql');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
 const promisemysql = require("promise-mysql");
+const dotenv = require('dotenv');
 
+// Call dotenv configuration
+dotenv.config();
 
 // Connection Properties
 const connectionProperties = {
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "",
+    password: process.env.password,
     database: "employees_DB"
 }
 
@@ -37,8 +40,8 @@ function startApp(){
       message: "MAIN MENU",
       choices: [
         "View all employees",
-        "View all employees by role",
         "View all employees by department",
+        "View all employees by role",
         "View all employees by manager",
         "Add employee",
         "Add role",
@@ -64,8 +67,12 @@ function startApp(){
                 viewAllEmpByDept();
                 break;
 
-            // case "View all employees by role":
-            //     viewAllEmpByRole();
+            case "View all employees by role":
+                viewAllEmpByRole();
+                break;
+
+            // case "View all employees by manager":
+            //     viewAllEmpByMngr();
             //     break;
 
             // case "Add employee":
@@ -86,10 +93,6 @@ function startApp(){
 
             // case "Update employee manager":
             //     updateEmpMngr();
-            //     break;
-
-            // case "View all employees by manager":
-            //     viewAllEmpByMngr();
             //     break;
 
             // case "Delete employee":
@@ -127,6 +130,49 @@ function viewAllEmp(){
 
         //Back to main menu
         startApp();
+    });
+}
+
+// view all employees by role
+function viewAllEmpByRole(){
+
+    // set global array to store all roles
+    let roleArr = [];
+
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties)
+    .then((conn) => {
+
+        // Query all roles
+        return conn.query('SELECT title FROM role');
+    }).then(function(roles){
+
+        // Place all roles within the roleArry
+        for (i=0; i < roles.length; i++){
+            roleArr.push(roles[i].title);
+        }
+    }).then(() => {
+
+        // Prompt user to select a role
+        inquirer.prompt({
+            name: "role",
+            type: "list",
+            message: "Which role would you like to search?",
+            choices: roleArr
+        })    
+        .then((answer) => {
+
+            // Query all employees by role selected by user
+            const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE role.title = '${answer.role}' ORDER BY ID ASC`;
+            connection.query(query, (err, res) => {
+                if(err) return err;
+
+                // show results using console.table
+                console.log("\n");
+                console.table(res);
+                startApp();
+            });
+        });
     });
 }
 

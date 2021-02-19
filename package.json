@@ -22,6 +22,7 @@
   "homepage": "https://github.com/codragon2020/employee_tracker#readme",
   "dependencies": {
     "console.table": "^0.10.0",
+    "dotenv": "^8.2.0",
     "inquirer": "^7.3.3",
     "mysql": "^2.18.1",
     "promise-mysql": "^5.0.2"

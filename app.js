@@ -71,9 +71,9 @@ function startApp(){
                 viewAllEmpByRole();
                 break;
 
-            // case "View all employees by manager":
-            //     viewAllEmpByMngr();
-            //     break;
+            case "View all employees by manager":
+                viewAllEmpByMngr();
+                break;
 
             case "Add employee":
                 addEmp();
@@ -133,6 +133,52 @@ function viewAllEmp(){
     });
 }
 
+// View all employees by department
+function viewAllEmpByDept(){
+
+    // Set global array to store department names
+    let deptArr = [];
+
+    // Create new connection using promise-mysql
+    promisemysql.createConnection(connectionProperties
+    ).then((conn) => {
+
+        // Query just names of departments
+        return conn.query('SELECT name FROM department');
+
+    }).then(function(value){
+
+        // Place all names within deptArr
+        for (i = 0; i < value.length; i++){
+            deptArr.push(value[i].name);
+        }
+    }).then(() => {
+
+        // Prompt user to select department from array of departments
+        inquirer.prompt({
+            name: "department",
+            type: "list",
+            message: "Which department would you like to search?",
+            choices: deptArr
+        })    
+        .then((answer) => {
+
+            // Query all employees depending on selected department
+            const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE department.name = '${answer.department}' ORDER BY ID ASC`;
+            connection.query(query, (err, res) => {
+                if(err) return err;
+                
+                // Show results in console.table
+                console.log("\n");
+                console.table(res);
+
+                // Back to main menu
+                startApp();
+            });
+        });
+    });
+}
+
 // view all employees by role
 function viewAllEmpByRole(){
 
@@ -176,46 +222,64 @@ function viewAllEmpByRole(){
     });
 }
 
-// View all employees by department
-function viewAllEmpByDept(){
+// View all employees by manager
+function viewAllEmpByMngr(){
 
-    // Set global array to store department names
-    let deptArr = [];
+    // set manager array
+    let managerArr = [];
 
-    // Create new connection using promise-mysql
-    promisemysql.createConnection(connectionProperties
-    ).then((conn) => {
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties)
+    .then((conn) => {
 
-        // Query just names of departments
-        return conn.query('SELECT name FROM department');
+        // Query all employees
+        return conn.query("SELECT DISTINCT m.id, CONCAT(m.first_name, ' ', m.last_name) AS manager FROM employee e Inner JOIN employee m ON e.manager_id = m.id");
 
-    }).then(function(value){
+    }).then((managers) => {
 
-        // Place all names within deptArr
-        for (i = 0; i < value.length; i++){
-            deptArr.push(value[i].name);
+        // place all employees in array
+        for (i = 0; i < managers.length; i++){
+            managerArr.push(managers[i].manager);
         }
-    }).then(() => {
 
-        // Prompt user to select department from array of departments
+        return managers;
+    }).then((managers) => {
+
         inquirer.prompt({
-            name: "department",
+
+            // Prompt user of manager
+            name: "manager",
             type: "list",
-            message: "Which department would you like to search?",
-            choices: deptArr
+            message: "\n Which manager would you like to search?",
+            choices: managerArr
         })    
         .then((answer) => {
 
-            // Query all employees depending on selected department
-            const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE department.name = '${answer.department}' ORDER BY Depa ASC`;
+            let managerID;
+
+            // get ID of manager selected
+            for (i = 0; i < managers.length; i++){
+                if (answer.manager == managers[i].manager){
+                    managerID = managers[i].id;
+                }
+            }
+
+            // query all employees by selected manager
+            const query = `SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, concat(m.first_name, ' ' ,  m.last_name) AS manager
+            FROM employee e
+            LEFT JOIN employee m ON e.manager_id = m.id
+            INNER JOIN role ON e.role_id = role.id
+            INNER JOIN department ON role.department_id = department.id
+            WHERE e.manager_id = ${managerID};`;
+    
             connection.query(query, (err, res) => {
                 if(err) return err;
                 
-                // Show results in console.table
+                // display results with console.table
                 console.log("\n");
                 console.table(res);
 
-                // Back to main menu
+                // back to main menu
                 startApp();
             });
         });
@@ -569,3 +633,4 @@ function updateEmpMngr(){
         });
     });
 }
+

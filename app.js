@@ -79,9 +79,9 @@ function startApp(){
                 addEmp();
                 break;
 
-            // case "Add department":
-            //     addDept();
-            //     break;
+            case "Add department":
+                addDept();
+                break;
 
             case "Add role":
                 addRole();
@@ -246,7 +246,7 @@ function addEmp(){
         }
 
         // place all managers in array
-        for (i = 0; i < managers.length; i++){
+        for (i = 0; i < managers.length; i++) {
             managerArr.push(managers[i].Employee);
         }
 
@@ -268,7 +268,7 @@ function addEmp(){
                         console.log("**FIELD REQUIRED**");
                         return false;
                     }
-                    else{
+                    else {
                         return true;
                     }
                 }
@@ -279,12 +279,12 @@ function addEmp(){
                 type: "input",
                 message: "Lastname name: ",
                 // Validate field is not blank
-                validate: function(input){
+                validate: function(input) {
                     if (input === ""){
                         console.log("**FIELD REQUIRED**");
                         return false;
                     }
-                    else{
+                    else {
                         return true;
                     }
                 }
@@ -310,14 +310,14 @@ function addEmp(){
 
             // Get ID of role selected
             for (i=0; i < roles.length; i++){
-                if (answer.role == roles[i].title){
+                if (answer.role == roles[i].title) {
                     roleID = roles[i].id;
                 }
             }
 
             // get ID of manager selected
             for (i=0; i < managers.length; i++){
-                if (answer.manager == managers[i].Employee){
+                if (answer.manager == managers[i].Employee) {
                     managerID = managers[i].id;
                 }
             }
@@ -336,6 +336,27 @@ function addEmp(){
     });
 }
 
+// Add Department
+function addDept(){
+
+    inquirer.prompt({
+
+            // Prompt user for name of department
+            name: "deptName",
+            type: "input",
+            message: "Department Name: "
+        }).then((answer) => {
+                
+            // add department to the table
+            connection.query(`INSERT INTO department (name)VALUES ("${answer.deptName}");`, (err, res) => {
+                if(err) return err;
+                console.log("\n DEPARTMENT ADDED...\n ");
+                startApp();
+            });
+
+        });
+}
+
 // Add Role
 function addRole(){
 
@@ -352,7 +373,7 @@ function addRole(){
     }).then((departments) => {
         
         // Place all departments in array
-        for (i=0; i < departments.length; i++){
+        for (i = 0; i < departments.length; i++) {
             departmentArr.push(departments[i].name);
         }
 
@@ -384,8 +405,8 @@ function addRole(){
             let deptID;
 
             // get id of department selected
-            for (i=0; i < departments.length; i++){
-                if (answer.dept == departments[i].name){
+            for (i = 0; i < departments.length; i++) {
+                if (answer.dept == departments[i].name) {
                     deptID = departments[i].id;
                 }
             }

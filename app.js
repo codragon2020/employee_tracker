@@ -99,12 +99,12 @@ function startApp(){
                 deleteEmp();
                 break;
 
+            case "Delete role":
+                deleteRole();
+                break;
+
             // case "View department budgets":
             //     viewDeptBudget();
-            //     break;
-
-            // case "Delete role":
-            //     deleteRole();
             //     break;
 
             // case "Delete department":
@@ -699,5 +699,87 @@ function deleteEmp(){
                 startApp();
             }
         });
+    });
+}
+
+// Delete Role
+function deleteRole(){
+
+    // Create role array
+    let roleArr = [];
+
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties
+    ).then((conn) => {
+
+        // query all roles
+        return conn.query("SELECT id, title FROM role");
+    }).then((roles) => {    
+
+        // add all roles to array
+        for (i = 0; i < roles.length; i++) {
+            roleArr.push(roles[i].title);
+        }
+
+        inquirer.prompt([{
+            // confirm to continue to select role to delete
+            name: "continueDelete",
+            type: "list",
+            message: "*** WARNING *** Deleting role will delete all employees associated with the role. Do you want to continue?",
+            choices: ["NO", "YES"]
+        }]).then((answer) => {
+
+            // if not, go to main menu
+            if (answer.continueDelete === "NO") {
+                startApp();
+            }
+
+        }).then(() => {
+
+            inquirer.prompt([{
+                // prompt user of of roles
+                name: "role",
+                type: "list",
+                message: "Which role would you like to delete?",
+                choices: roleArr
+            }, {
+                // confirm to delete role by typing role exactly
+                name: "confirmDelete",
+                type: "Input",
+                message: "Type the role title EXACTLY to confirm deletion of the role"
+
+            }]).then((answer) => {
+
+                if(answer.confirmDelete === answer.role){
+
+                    // get role id of of selected role
+                    let roleID;
+                    for (i=0; i < roles.length; i++){
+                        if (answer.role == roles[i].title){
+                            roleID = roles[i].id;
+                        }
+                    }
+                    
+                    // delete role
+                    connection.query(`DELETE FROM role WHERE id=${roleID};`, (err, res) => {
+                        if(err) return err;
+
+                        // confirm role has been deleted 
+                        console.log(`\n ROLE '${answer.role}' DELETED...\n `);
+
+                        //back to main menu
+                        startApp();
+                    });
+                } 
+                else {
+
+                    // if not confirmed, do not delete
+                    console.log(`\n ROLE '${answer.role}' NOT DELETED...\n `);
+
+                    //back to main menu
+                    startApp();
+                }
+            });
+        })
     });
 }

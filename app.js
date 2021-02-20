@@ -87,13 +87,13 @@ function startApp(){
                 addRole();
                 break;
 
-            // case "Update employee role":
-            //     updateEmpRole();
-            //     break;
+            case "Update employee role":
+                updateEmpRole();
+                break;
 
-            // case "Update employee manager":
-            //     updateEmpMngr();
-            //     break;
+            case "Update employee manager":
+                updateEmpMngr();
+                break;
 
             // case "Delete employee":
             //     deleteEmp();
@@ -139,7 +139,7 @@ function viewAllEmpByRole(){
     // set global array to store all roles
     let roleArr = [];
 
-    // Create connection using promise-sql
+    // Create connection using promise-mysql
     promisemysql.createConnection(connectionProperties)
     .then((conn) => {
 
@@ -182,7 +182,7 @@ function viewAllEmpByDept(){
     // Set global array to store department names
     let deptArr = [];
 
-    // Create new connection using promise-sql
+    // Create new connection using promise-mysql
     promisemysql.createConnection(connectionProperties
     ).then((conn) => {
 
@@ -229,7 +229,7 @@ function addEmp(){
     let roleArr = [];
     let managerArr = [];
 
-    // Create connection using promise-sql
+    // Create connection using promise-mysql
     promisemysql.createConnection(connectionProperties
     ).then((conn) => {
 
@@ -363,7 +363,7 @@ function addRole(){
     // Create array of departments
     let departmentArr = [];
 
-    // Create connection using promise-sql
+    // Create connection using promise-mysql
     promisemysql.createConnection(connectionProperties)
     .then((conn) => {
 
@@ -416,6 +416,154 @@ function addRole(){
             VALUES ("${answer.roleTitle}", ${answer.salary}, ${deptID})`, (err, res) => {
                 if(err) return err;
                 console.log(`\n ROLE ${answer.roleTitle} ADDED...\n`);
+                startApp();
+            });
+        });
+    });
+}
+
+// Update Employee Role
+function updateEmpRole(){
+
+    // create employee and role array
+    let employeeArr = [];
+    let roleArr = [];
+
+    // Create connection using promise-mysql
+    promisemysql.createConnection(connectionProperties
+    ).then((conn) => {
+        return Promise.all([
+
+            // query all roles and employees
+            conn.query('SELECT id, title FROM role ORDER BY title ASC'), 
+            conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC")
+        ]);
+    }).then(([roles, employees]) => {
+
+        // place all roles in array
+        for (i = 0; i < roles.length; i++){
+            roleArr.push(roles[i].title);
+        }
+
+        // place all employees in array
+        for (i = 0; i < employees.length; i++){
+            employeeArr.push(employees[i].Employee);
+            //console.log(value[i].name);
+        }
+
+        return Promise.all([roles, employees]);
+    }).then(([roles, employees]) => {
+
+        inquirer.prompt([
+            {
+                // prompt user to select employee
+                name: "employee",
+                type: "list",
+                message: "Who would you like to edit?",
+                choices: employeeArr
+            }, {
+                // Select role to update employee
+                name: "role",
+                type: "list",
+                message: "What is their new role?",
+                choices: roleArr
+            },
+        ]).then((answer) => {
+
+            let roleID;
+            let employeeID;
+
+            /// get ID of role selected
+            for (i = 0; i < roles.length; i++) {
+                if (answer.role == roles[i].title) {
+                    roleID = roles[i].id;
+                }
+            }
+
+            // get ID of employee selected
+            for (i = 0; i < employees.length; i++) {
+                if (answer.employee == employees[i].Employee){
+                    employeeID = employees[i].id;
+                }
+            }
+            
+            // update employee with new role
+            connection.query(`UPDATE employee SET role_id = ${roleID} WHERE id = ${employeeID}`, (err, res) => {
+                if(err) return err;
+
+                // confirm update employee
+                console.log(`\n ${answer.employee} ROLE UPDATED TO ${answer.role}...\n `);
+
+                // back to main menu
+                startApp();
+            });
+        });
+    });
+}
+
+// Update employee manager
+function updateEmpMngr(){
+
+    // set global array for employees
+    let employeeArr = [];
+
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties
+    ).then((conn) => {
+
+        // query all employees
+        return conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC");
+    }).then((employees) => {
+
+        // place employees in array
+        for (i = 0; i < employees.length; i++){
+            employeeArr.push(employees[i].Employee);
+        }
+
+        return employees;
+    }).then((employees) => {
+
+        inquirer.prompt([
+            {
+                // prompt user to selected employee
+                name: "employee",
+                type: "list",
+                message: "Who would you like to edit?",
+                choices: employeeArr
+            }, {
+                // prompt user to select new manager
+                name: "manager",
+                type: "list",
+                message: "Who is their new Manager?",
+                choices: employeeArr
+            },
+        ]).then((answer) => {
+
+            let employeeID;
+            let managerID;
+
+            // get ID of selected manager
+            for (i = 0; i < employees.length; i++){
+                if (answer.manager == employees[i].Employee){
+                    managerID = employees[i].id;
+                }
+            }
+
+            // get ID of selected employee
+            for (i = 0; i < employees.length; i++){
+                if (answer.employee == employees[i].Employee){
+                    employeeID = employees[i].id;
+                }
+            }
+
+            // update employee with manager ID
+            connection.query(`UPDATE employee SET manager_id = ${managerID} WHERE id = ${employeeID}`, (err, res) => {
+                if(err) return err;
+
+                // confirm update employee
+                console.log(`\n ${answer.employee} MANAGER UPDATED TO ${answer.manager}...\n`);
+
+                // go back to main menu
                 startApp();
             });
         });

@@ -107,9 +107,9 @@ function startApp(){
                 deleteDept();
                 break;
 
-            // case "View department budgets":
-            //     viewDeptBudget();
-            //     break;
+            case "View department budgets":
+                viewDeptBudget();
+                break;
         }
     });
 }
@@ -866,5 +866,51 @@ function deleteDept(){
                 }
             });
         })
+    });
+}
+
+// View Department Budget
+function viewDeptBudget(){
+
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties)
+    .then((conn) => {
+        return  Promise.all([
+
+            // query all departments and salaries
+            conn.query("SELECT department.name AS department, role.salary FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY department ASC"),
+            conn.query('SELECT name FROM department ORDER BY name ASC')
+        ]);
+    }).then(([deptSalaries, departments]) => {
+        
+        let deptBudgetArr =[];
+        let department;
+
+        for (d = 0; d < departments.length; d++){
+            let departmentBudget = 0;
+
+            // add all salaries together
+            for (i = 0; i < deptSalaries.length; i++){
+                if (departments[d].name == deptSalaries[i].department){
+                    departmentBudget += deptSalaries[i].salary;
+                }
+            }
+
+            // create new property with budgets
+            department = {
+                Department: departments[d].name,
+                Budget: departmentBudget
+            }
+
+            // add to array
+            deptBudgetArr.push(department);
+        }
+        console.log("\n");
+
+        // display departments budgets using console.table
+        console.table(deptBudgetArr);
+
+        // back to main menu
+        startApp();
     });
 }
